@@ -52,14 +52,9 @@ var Circle = (function (_super) {
     return Circle;
 }(Shape));
 var Transformer = (function () {
-    function Transformer(size) {
-        this.canvasSize = size;
+    function Transformer() {
+        this.canvasSize = null;
     }
-    Transformer.prototype.translatePoint = function (p) {
-        var x = (1 - p.x) * this.canvasSize.width;
-        var y = p.y * this.canvasSize.height;
-        return p;
-    };
     Transformer.prototype.translateUpperLeft = function (p, s) {
         var x = p.x * this.canvasSize.width;
         var y = (1 - p.y - s.height) * this.canvasSize.height;
@@ -78,23 +73,39 @@ var Transformer = (function () {
     };
     return Transformer;
 }());
+var HorizontalMirrorTransformer = (function (_super) {
+    __extends(HorizontalMirrorTransformer, _super);
+    function HorizontalMirrorTransformer() {
+        _super.apply(this, arguments);
+    }
+    HorizontalMirrorTransformer.prototype.translateUpperLeft = function (p, s) {
+        var x = (1 - p.x - s.width) * this.canvasSize.width;
+        var y = (1 - p.y - s.height) * this.canvasSize.height;
+        return { x: x, y: y };
+    };
+    HorizontalMirrorTransformer.prototype.translateCenterPoint = function (p, s) {
+        var x = (1 - p.x - 0.5 * s.width) * this.canvasSize.width;
+        var y = (1 - p.y - s.height / 2) * this.canvasSize.height;
+        return { x: x, y: y };
+    };
+    return HorizontalMirrorTransformer;
+}(Transformer));
 var DrawArea = (function () {
-    function DrawArea(width, height, canvas) {
-        this.width = width;
-        this.height = height;
+    function DrawArea(canvas, transformer) {
+        if (transformer === void 0) { transformer = new Transformer(); }
         this.shapes = [];
         this.myCanvas = null;
-        this.mySize = { width: width, height: height };
         this.myCanvas = canvas;
+        transformer.canvasSize = { width: canvas.width, height: canvas.height };
+        this.myTransformer = transformer;
     }
     DrawArea.prototype.addShape = function (shape) {
         this.shapes.push(shape);
     };
     DrawArea.prototype.drawOnCanvas = function () {
-        var simpleTransformer = new Transformer(this.mySize);
         for (var _i = 0, _a = this.shapes; _i < _a.length; _i++) {
             var shape = _a[_i];
-            shape.drawOnCanvas(simpleTransformer, this.myCanvas);
+            shape.drawOnCanvas(this.myTransformer, this.myCanvas);
         }
     };
     return DrawArea;
@@ -105,13 +116,14 @@ var r3 = new Rectangle({ x: 0.75, y: 0.75 }, { width: 0.1, height: 0.1 });
 var c1 = new Circle({ x: 0.5, y: 0.5 }, { width: 0.1, height: 0.1 });
 var canvas1 = document.getElementById("tekenvlak1");
 var canvas2 = document.getElementById("tekenvlak2");
-var drawArea1 = new DrawArea(300, 300, canvas1);
-var drawArea2 = new DrawArea(150, 150, canvas2);
+var drawArea1 = new DrawArea(canvas1);
+var drawArea2 = new DrawArea(canvas2, new HorizontalMirrorTransformer());
 drawArea1.addShape(r1);
 drawArea1.addShape(r2);
 drawArea1.addShape(r3);
 drawArea1.addShape(c1);
 drawArea1.drawOnCanvas();
+// Mirror ding
 drawArea2.addShape(r1);
 drawArea2.addShape(r2);
 drawArea2.addShape(r3);

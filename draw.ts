@@ -65,16 +65,7 @@ class Circle extends Shape {
 
 
 class Transformer {
-    private canvasSize : Size;
-    constructor (size : Size) {
-        this.canvasSize = size;
-    }
-    translatePoint (p : Point) : Point {
-        let x = (1 - p.x) * this.canvasSize.width;
-        let y = p.y * this.canvasSize.height;
-        return p;
-    } 
-
+    public canvasSize : Size = null
 
     translateUpperLeft(p : Point, s : Size) : Point {
         let x = p.x * this.canvasSize.width;
@@ -97,13 +88,30 @@ class Transformer {
     }
 }
 
+
+class HorizontalMirrorTransformer extends Transformer{
+    translateUpperLeft(p : Point, s : Size) : Point {
+        let x = (1-p.x - s.width) * this.canvasSize.width;
+        let y = (1 - p.y - s.height) * this.canvasSize.height;
+        return {x: x, y: y};
+    } 
+
+    translateCenterPoint(p : Point, s : Size) : Point {
+        let x = (1-p.x - 0.5 * s.width)* this.canvasSize.width;
+        let y = (1 - p.y - s.height/2) * this.canvasSize.height;
+        return {x: x, y: y};
+    } 
+}
+
 class DrawArea {
     private shapes : Shape[] = [];
     private myCanvas : HTMLCanvasElement = null;
-    private mySize : Size
-    constructor (public width, public height, canvas : HTMLCanvasElement) {
-       this.mySize = {width, height};
+    private myTransformer : Transformer; 
+
+    constructor (canvas : HTMLCanvasElement, transformer : Transformer = new Transformer()) {
        this.myCanvas = canvas;
+       transformer.canvasSize = {width: canvas.width, height: canvas.height};
+       this.myTransformer = transformer;       
     }
 
     addShape (shape : Shape) {
@@ -111,10 +119,8 @@ class DrawArea {
     }
 
     drawOnCanvas () {
-        let simpleTransformer = new Transformer (this.mySize);
-
         for (let shape of this.shapes) {
-            shape.drawOnCanvas (simpleTransformer, this.myCanvas);
+            shape.drawOnCanvas (this.myTransformer, this.myCanvas);
         }
     }
 
@@ -132,8 +138,8 @@ let c1 = new Circle ({x:0.5, y:0.5}, {width:0.1, height:0.1});
 let canvas1 = document.getElementById("tekenvlak1")
 let canvas2 = document.getElementById("tekenvlak2")
 
-let drawArea1 = new DrawArea (300, 300, <HTMLCanvasElement> canvas1);
-let drawArea2 = new DrawArea (150, 150, <HTMLCanvasElement> canvas2);
+let drawArea1 = new DrawArea (<HTMLCanvasElement> canvas1);
+let drawArea2 = new DrawArea (<HTMLCanvasElement> canvas2, new HorizontalMirrorTransformer());
 
 drawArea1.addShape(r1);
 drawArea1.addShape(r2);
@@ -142,6 +148,8 @@ drawArea1.addShape(r3);
 drawArea1.addShape(c1);
 
 drawArea1.drawOnCanvas();
+
+// Mirror ding
 
 drawArea2.addShape(r1);
 drawArea2.addShape(r2);
