@@ -111,6 +111,7 @@ class DrawArea {
     constructor (canvas : HTMLCanvasElement, transformer : Transformer = new Transformer()) {
        this.myCanvas = canvas;
        transformer.canvasSize = {width: canvas.width, height: canvas.height};
+       
        this.myTransformer = transformer;       
     }
 
